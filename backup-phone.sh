@@ -2,7 +2,8 @@
 
 # backup-phone.sh — bulk sync specific folders from the phone
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SCRIPT_DIR="${0%/*}"
+[[ "$SCRIPT_DIR" == "$0" ]] && SCRIPT_DIR="."
 
 FOLDERS=(
     "DCIM"
@@ -13,7 +14,7 @@ FOLDERS=(
 )
 
 usage() {
-    echo "Usage: $(basename "$0") [OPTIONS] [TARGET_BASE_DIR]"
+    echo "Usage: ${0##*/} [OPTIONS] [TARGET_BASE_DIR]"
     echo ""
     echo "Bulk sync specific folders from the phone to a local directory."
     echo ""
@@ -21,7 +22,7 @@ usage() {
     echo "  -h, --help       Show this help message and exit"
     echo ""
     echo "Arguments:"
-    echo "  TARGET_BASE_DIR  Base directory for the backup (default: ~/phone-backup/YYYY-MM-DD-HH)"
+    echo "  TARGET_BASE_DIR  Base directory for the backup (default: ~/phone-backup)"
     echo ""
     echo "Folders synced:"
     for f in "${FOLDERS[@]}"; do
@@ -29,13 +30,13 @@ usage() {
     done
 }
 
-if [[ "$1" == "-h" || "$1" == "--help" ]]; then
-    usage
-    exit 0
-fi
+[[ "$1" == "-h" || "$1" == "--help" ]] && { usage; exit 0; }
 
-# By default, create a timestamped folder in ~/phone-backup
-BACKUP_BASE="${1:-${HOME}/phone-backup/$(date +"%Y-%m-%d-%H")}"
+# Default target directory
+DEFAULT_BACKUP_DIR="${HOME}/phone-backup"
+
+# Use the provided argument or fall back to the default
+BACKUP_BASE="${1:-$DEFAULT_BACKUP_DIR}"
 
 echo "[*] Starting bulk backup to: $BACKUP_BASE"
 

@@ -26,7 +26,7 @@ The primary script for backing up multiple folders at once.
 ./backup-phone.sh [TARGET_BASE_DIR]
 ```
 
-- **TARGET_BASE_DIR**: (Optional) The directory where backups will be stored. Defaults to `~/phone-backup/YYYY-MM-DD-HH`.
+- **TARGET_BASE_DIR**: (Optional) The directory where backups will be stored. Defaults to `~/phone-backup`.
 - **Options**: Use `--help` to see synced folders and usage details.
 
 **Example:**

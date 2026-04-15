@@ -46,10 +46,7 @@ FOLDER="${POSITIONAL_ARGS[0]:-}"
 TARGET="${POSITIONAL_ARGS[1]:-}"
 
 # ================== VALIDATE ==================
-if [[ -z "$FOLDER" || -z "$TARGET" ]]; then
-    echo "[!] <from> and <to> arguments are required" >&2
-    usage
-fi
+[[ -z "$FOLDER" || -z "$TARGET" ]] && { echo "[!] <from> and <to> arguments are required" >&2; usage; }
 
 # ================== SYNC ==================
 mkdir -p "$TARGET"
@@ -57,18 +54,14 @@ mkdir -p "$TARGET"
 RSYNC_ARGS=(-a --partial -e "ssh -p $SSH_PORT")
 
 rsync_ver=$(rsync --version 2>/dev/null || true)
-if [[ "$rsync_ver" == *"version 3"* ]]; then
-    RSYNC_ARGS+=(--info=progress2)
-else
-    RSYNC_ARGS+=(--progress)
-fi
+[[ "$rsync_ver" == *"version 3"* ]] && RSYNC_ARGS+=(--info=progress2) || RSYNC_ARGS+=(--progress)
 
 echo "[*] $FOLDER → $TARGET"
 
 if rsync "${RSYNC_ARGS[@]}" "$REMOTE:$REMOTE_BASE/$FOLDER/" "$TARGET/"; then
     echo "[+] done"
     exit 0
+else
+    echo "[!] rsync failed" >&2
+    exit 1
 fi
-
-echo "[!] rsync failed" >&2
-exit 1
