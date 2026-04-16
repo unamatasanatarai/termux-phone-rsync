@@ -58,10 +58,10 @@ rsync_ver=$(rsync --version 2>/dev/null || true)
 
 echo "[*] $FOLDER → $TARGET"
 
-if rsync "${RSYNC_ARGS[@]}" "$REMOTE:$REMOTE_BASE/$FOLDER/" "$TARGET/"; then
-    echo "[+] done"
-    exit 0
-else
+if ! rsync "${RSYNC_ARGS[@]}" "$REMOTE:$REMOTE_BASE/$FOLDER/" "$TARGET/"; then
     echo "[!] rsync failed" >&2
     exit 1
 fi
+
+echo "[+] done"
+exit 0
