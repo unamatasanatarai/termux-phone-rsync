@@ -1,69 +1,45 @@
 #!/usr/bin/env bash
 # rcp — Rsync a folder from remote (or local) to local directory
 
-# ================== DEFAULTS ==================
-SSH_PORT="8022"
+SSH_PORT=8022
 
-# ================== HELP ==================
 usage() {
-    cat <<EOF
-Usage: ${0##*/} [options] <from> <to>
-
-Rsync a folder from source to local directory.
-
-Arguments:
-  <from>    Source path (e.g. user@host:/remote/path or /local/path)
-  <to>      Local target directory
-
-Options:
-  -p PORT     SSH port         (default: $SSH_PORT)
-  -h, --help  Show this help
-EOF
+    echo "Usage: ${0##*/} [-p PORT] <from> <to>"
     exit 0
 }
 
-# ================== ARGUMENT PARSING ==================
-while [[ $# -gt 0 ]]; do
-    case "$1" in
-        -p) SSH_PORT="$2"; shift 2 ;;
-        -h|--help) usage ;;
-        -*) echo "Unknown option: $1" >&2; usage ;;
-        *) break ;;
+# Parse options
+while getopts ":p:h" opt; do
+    case $opt in
+        p) SSH_PORT="$OPTARG" ;;
+        h) usage ;;
+        *) usage ;;
     esac
 done
+shift $((OPTIND - 1))
 
-FROM="${1:-}"
-TARGET="${2:-}"
+FROM="$1"
+TARGET="$2"
 
-# ================== VALIDATION ==================
-if [[ -z "$FROM" || -z "$TARGET" ]]; then
-    echo "[!] Error: <from> and <to> arguments are required" >&2
-    usage
-fi
+# Validate input
+[[ -z "$FROM" || -z "$TARGET" ]] && usage
 
-# ================== PREPARE ==================
 mkdir -p "$TARGET"
-
 echo "[*] Syncing: $FROM → $TARGET"
 
-RSYNC_ARGS=(-a --partial)
+# Base rsync args
+ARGS=(-a --partial)
 
-rsync_ver=$(rsync --version 2>/dev/null | head -n1)
-if [[ "$rsync_ver" =~ version[[:space:]]+3\.([1-9]|[0-9]{2,})\. ]]; then
-    RSYNC_ARGS+=(--info=progress2)
-else
-    RSYNC_ARGS+=(--progress)
-fi
+# Progress flag (version-aware)
+rsync --version | head -n1 | grep -qE 'version 3\.[1-9]' \
+    && ARGS+=(--info=progress2) \
+    || ARGS+=(--progress)
 
-# If source looks like remote (contains ':'), use SSH
-if [[ "$FROM" == *:* ]]; then
-    RSYNC_ARGS+=(-e "ssh -p $SSH_PORT")
-fi
+# Add SSH if remote
+[[ "$FROM" == *:* ]] && ARGS+=(-e "ssh -p $SSH_PORT")
 
-# ================== SYNC ==================
-if ! rsync "${RSYNC_ARGS[@]}" "$FROM/" "$TARGET/"; then
+# Run rsync
+rsync "${ARGS[@]}" "$FROM/" "$TARGET/" || {
     echo "[!] rsync failed" >&2
     exit 1
-fi
-
-echo "[+] Done"
+}
