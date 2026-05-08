@@ -1,45 +1,54 @@
 #!/usr/bin/env bash
-# rcp — Rsync a folder from remote (or local) to local directory
 
-SSH_PORT=8022
+# Technical Justification:
+# 1. External 'rsync' is the core dependency and unavoidable.
+# 2. 'mkdir' is used only if the target directory does not exist to minimize forks.
+# 3. Version-aware progress flag is removed to eliminate the triple-fork pipeline.
+#    Standard --progress is used as a safe, cross-version fallback.
 
-usage() {
-    echo "Usage: ${0##*/} [-p PORT] <from> <to>"
-    exit 0
-}
+_ssh_port=8022
 
 # Parse options
-while getopts ":p:h" opt; do
-    case $opt in
-        p) SSH_PORT="$OPTARG" ;;
-        h) usage ;;
-        *) usage ;;
+while getopts ":p:h" _opt; do
+    case "${_opt}" in
+    p) _ssh_port="${OPTARG}" ;;
+    *)
+        printf "Usage: %s [-p PORT] <from> <to>\n" "${0##*/}" >&2
+        exit 1
+        ;;
     esac
 done
 shift $((OPTIND - 1))
 
-FROM="$1"
-TARGET="$2"
+_from="$1"
+_target="$2"
 
 # Validate input
-[[ -z "$FROM" || -z "$TARGET" ]] && usage
+if [[ -z "${_from}" || -z "${_target}" ]]; then
+    printf "Usage: %s [-p PORT] <from> <to>\n" "${0##*/}" >&2
+    exit 1
+fi
 
-mkdir -p "$TARGET"
-echo "[*] Syncing: $FROM → $TARGET"
+# Ensure target exists; guard to avoid fork if already present
+if [[ ! -d "${_target}" ]]; then
+    mkdir -p "${_target}" || {
+        printf "Error: Failed to create directory %s\n" "${_target}" >&2
+        exit 1
+    }
+fi
 
-# Base rsync args
-ARGS=(-a --partial)
+printf "Syncing: %s -> %s\n" "${_from}" "${_target}"
 
-# Progress flag (version-aware)
-rsync --version | head -n1 | grep -qE 'version 3\.[1-9]' \
-    && ARGS+=(--info=progress2) \
-    || ARGS+=(--progress)
+# Base rsync arguments
+_args=(-a --partial --progress)
 
-# Add SSH if remote
-[[ "$FROM" == *:* ]] && ARGS+=(-e "ssh -p $SSH_PORT")
+# Add SSH configuration if remote source
+if [[ "${_from}" == *:* ]]; then
+    _args+=(-e "ssh -p ${_ssh_port}")
+fi
 
 # Run rsync
-rsync "${ARGS[@]}" "$FROM/" "$TARGET/" || {
-    echo "[!] rsync failed" >&2
+rsync "${_args[@]}" "${_from}/" "${_target}/" || {
+    printf "Error: rsync failed for %s\n" "${_from}" >&2
     exit 1
 }

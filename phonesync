@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+# Technical Justification:
+# 1. External 'rsync' is unavoidable for the core sync task.
+# 2. Logic from 'rcp' is integrated to eliminate the subshell fork per loop iteration.
+
+_script_dir="${0%/*}"
+[[ "${_script_dir}" == "$0" ]] && _script_dir="."
+
+declare -A _folders=(
+    ["u0_a275@192.168.1.196:~/storage/shared/DCIM/Camera"]="$HOME/phone-backup/photos"
+    ["u0_a275@192.168.1.196:~/storage/shared/Pictures/Signal"]="$HOME/phone-backup/photos"
+    ["u0_a275@192.168.1.196:~/storage/shared/Pictures/Snapseed"]="$HOME/phone-backup/photos/snapseed"
+    ["u0_a275@192.168.1.196:~/storage/shared/Documents"]="$HOME/phone-backup/docs"
+    ["u0_a275@192.168.1.196:~/storage/shared/Movies/Signal"]="$HOME/phone-backup/photos/signal"
+    ["u0_a275@192.168.1.196:~/storage/shared/Vault"]="$HOME/phone-backup/Vault"
+)
+
+_success=0
+_total=${#_folders[@]}
+_ssh_port=8022
+
+for _from in "${!_folders[@]}"; do
+    _target="${_folders[${_from}]}"
+
+    # Ensure target exists; guard to avoid fork
+    if [[ ! -d "${_target}" ]]; then
+        mkdir -p "${_target}" || {
+            printf "Error: Failed to create %s\n" "${_target}" >&2
+            continue
+        }
+    fi
+
+    printf "Syncing: %s -> %s\n" "${_from}" "${_target}"
+
+    _args=(-a --partial --progress)
+    [[ "${_from}" == *:* ]] && _args+=(-e "ssh -p ${_ssh_port}")
+
+    if rsync "${_args[@]}" "${_from}/" "${_target}/"; then
+        ((_success++))
+    else
+        printf "Error: Failed to sync %s\n" "${_from}" >&2
+    fi
+done
+
+printf "\nBackup complete: %s / %s folders synced\n" "${_success}" "${_total}"

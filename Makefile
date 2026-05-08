@@ -6,8 +6,8 @@
 # Main target: executes the backup process
 run:
 	@printf "[\033[34m*\033[0m] Starting phone backup...\n"
-	@chmod +x backup-phone.sh rcp
-	@./backup-phone.sh
+	@chmod +x phonesync rcp
+	@./phonesync
 
 # Validation target: ensures rsync is installed
 check:

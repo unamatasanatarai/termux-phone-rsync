@@ -1,79 +1,71 @@
 # Phone Backup Scripts
 
-A set of simple shell scripts to bulk-sync specific folders from an Android phone (running Termux/SSH) to a local machine using `rsync`.
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Bash](https://img.shields.io/badge/language-Bash-4EAA25.svg)
+
+A high-performance, Pure Bash toolset designed to automate the backup of specific directories from an Android device (via Termux/SSH) to a local workstation. This project prioritizes execution efficiency and minimal process overhead using optimized shell scripting patterns.
 
 ## Features
 
-- **Modular Design**: A main script for bulk backups and a helper script for individual folder syncs.
-- **Progress Tracking**: Uses `rsync` progress reporting.
-- **Flexible Targets**: Supports custom backup directories or defaults to timestamped folders.
-- **Help Documentation**: Built-in `--help` flags for all scripts.
+- **Performance-Optimized**: Optimized execution flow with minimal subshells and forks.
+- **Bulk Sync**: Automated backup of multiple predefined directories in a single command.
+- **Standalone Utility**: Includes a versatile sync tool for individual folder transfers.
+- **Dependency Validation**: Built-in checks to ensure required binaries are available.
+- **Automated Workflow**: Makefile-driven interface for easy execution and management.
 
-## Installation & Requirements
+## Tech Stack
 
-1. **Rsync**: Ensure `rsync` is installed on both your local machine and the phone.
-2. **SSH**: The phone should have an SSH server running (e.g., via Termux).
-3. **SSH Keys**: It is highly recommended to set up SSH key-based authentication so you don't have to enter a password for every folder.
+- **Scripting**: Pure Bash (High-Performance Architecture)
+- **Sync Engine**: Rsync
+- **Transport**: SSH
+- **Automation**: GNU Make
 
-## Scripts
+## Project Structure
 
-### 1. `backup-phone.sh`
+- `phonesync`: The primary entry point for bulk backups.
+- `rcp`: A standalone utility for individual folder synchronization.
+- `Makefile`: Command-line interface for running and checking the project.
+- `LICENSE`: MIT License documentation.
 
-The primary script for backing up multiple folders at once.
+## Installation
 
-**Usage:**
+1. **Prerequisites**: Ensure `rsync` and `ssh` are installed on both the local machine and the remote Android device (e.g., via Termux).
+2. **Clone the repository**:
+   ```bash
+   git clone https://github.com/unamatasanatarai/termux-phone-rsync
+   cd backup-phone
+   ```
+3. **Verify Dependencies**:
+   ```bash
+   make check
+   ```
+
+## Usage
+
+### Automated Backup
+To execute the full backup suite as defined in the configuration:
 ```bash
-./backup-phone.sh [TARGET_BASE_DIR]
+make
 ```
 
-- **TARGET_BASE_DIR**: (Optional) The directory where backups will be stored. Defaults to `~/phone-backup`.
-- **Options**: Use `--help` to see synced folders and usage details.
-
-**Example:**
+### Manual Individual Sync
+Use the `rcp` utility to sync specific directories:
 ```bash
-./backup-phone.sh ~/backups/my-phone
+./rcp [-p PORT] <from> <to>
 ```
-
-### 2. `sync-folder.sh`
-
-A helper script used by `backup-phone.sh` to sync a single directory. It can also be used independently.
-
-**Usage:**
+*Example:*
 ```bash
-./sync-folder.sh [options] <from> <to>
+./rcp -p 8022 u0_a275@192.168.1.196:~/photos ~/backups/photos
 ```
-
-- **Arguments**:
-    - `<from>`: Remote folder to sync (relative to the remote base path).
-    - `<to>`: Local target directory.
-- **Options**:
-    - `-r REMOTE`: Remote `user@host` (default: `u0_a275@192.168.1.196`).
-    - `-p PORT`: SSH port (default: `8022`).
 
 ## Configuration
 
-### Sync Folders
-To change which folders are backed up, edit the `FOLDERS` array in `backup-phone.sh`:
+### Sync Targets
+Backup locations are managed within the `_folders` associative array in `phonesync`. To modify sync targets, update the keys (remote paths) and values (local paths) in that file.
 
-```bash
-FOLDERS=(
-    "DCIM"
-    "Pictures"
-    "Documents"
-    "Movies/Signal"
-    "Vault"
-)
-```
-
-### Remote Connection
-To change the default remote host or path, update the variables in `sync-folder.sh`:
-
-```bash
-REMOTE="u0_a275@192.168.1.196"
-SSH_PORT="8022"
-REMOTE_BASE="~/storage/shared"
-```
+### Connection Settings
+The default SSH port and remote credentials can be adjusted in both `phonesync` and `rcp` via the `_ssh_port` variable.
 
 ## License
 
-MIT
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
