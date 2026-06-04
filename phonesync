@@ -8,12 +8,12 @@ _script_dir="${0%/*}"
 [[ "${_script_dir}" == "$0" ]] && _script_dir="."
 
 declare -A _folders=(
-    ["u0_a275@192.168.1.196:~/storage/shared/DCIM/Camera"]="$HOME/phone-backup/photos"
-    ["u0_a275@192.168.1.196:~/storage/shared/Pictures/Signal"]="$HOME/phone-backup/photos"
-    ["u0_a275@192.168.1.196:~/storage/shared/Pictures/Snapseed"]="$HOME/phone-backup/photos/snapseed"
-    ["u0_a275@192.168.1.196:~/storage/shared/Documents"]="$HOME/phone-backup/docs"
-    ["u0_a275@192.168.1.196:~/storage/shared/Movies/Signal"]="$HOME/phone-backup/photos/signal"
-    ["u0_a275@192.168.1.196:~/storage/shared/Vault"]="$HOME/phone-backup/Vault"
+    ["u0_a275@192.168.1.196:~/storage/shared/DCIM/Camera"]="$HOME/_backups/phone/photos"
+    ["u0_a275@192.168.1.196:~/storage/shared/Pictures/Signal"]="$HOME/_backups/phone/photos"
+    ["u0_a275@192.168.1.196:~/storage/shared/Pictures/Snapseed"]="$HOME/_backups/phone/photos/snapseed"
+    ["u0_a275@192.168.1.196:~/storage/shared/Documents"]="$HOME/_backups/phone/docs"
+    ["u0_a275@192.168.1.196:~/storage/shared/Movies/Signal"]="$HOME/_backups/phone/photos/signal"
+    ["u0_a275@192.168.1.196:~/storage/shared/Vault"]="$HOME/_backups/phone/Vault"
 )
 
 _success=0
